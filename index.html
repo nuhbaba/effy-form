@@ -1,0 +1,812 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Estimez votre prime énergie - MonParcours</title>
+<style>
+  :root {
+    --primary: #3b3bff;
+    --primary-light: #eef0ff;
+    --yellow: #ffde59;
+    --dark: #1a1a2e;
+    --gray: #6b7280;
+    --border: #e5e7eb;
+    --bg: #f8f9fc;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
+  body { background: #fff; color: var(--dark); display: flex; flex-direction: column; min-height: 100vh; }
+
+  /* ===== BANNIÈRE COOKIES ===== */
+  #cookie-banner {
+    position: fixed; bottom: 0; left: 0; right: 0;
+    background: #0f2740; color: #fff; padding: 20px 24px;
+    display: flex; flex-wrap: wrap; gap: 16px; align-items: center;
+    justify-content: space-between; z-index: 9999;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.25);
+    border-top: 4px solid var(--yellow);
+    transform: translateY(100%); transition: transform .4s ease;
+  }
+  #cookie-banner.show { transform: translateY(0); }
+  #cookie-banner p { flex: 1 1 300px; font-size: 14px; line-height: 1.5; }
+  #cookie-banner a { color: var(--yellow); }
+  .cookie-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .cookie-btns button {
+    border: none; padding: 10px 18px; border-radius: 6px;
+    font-size: 14px; cursor: pointer; font-weight: 600; transition: .2s;
+  }
+  .btn-accept { background: var(--yellow); color: var(--dark); }
+  .btn-accept:hover { background: #f4d03f; }
+  .btn-refuse { background: transparent; color: #fff; border: 1px solid #fff; }
+  .btn-refuse:hover { background: rgba(255,255,255,.15); }
+  .btn-settings { background: transparent; color: #9fb3c8; border: none; text-decoration: underline; font-weight: 400; }
+
+  /* ===== HEADER ===== */
+  header {
+    display: flex; align-items: center; padding: 20px 40px;
+    border-bottom: 1px solid var(--border); background: #fff; z-index: 10;
+  }
+  .logo { font-size: 28px; font-weight: 900; color: var(--dark); letter-spacing: -1px; }
+  .logo span { color: var(--primary); }
+  header .title { margin-left: 40px; font-weight: 600; font-size: 15px; color: var(--dark); }
+  .header-right { margin-left: auto; font-size: 14px; color: var(--gray); }
+  .header-right a { color: var(--primary); text-decoration: none; font-weight: 600; }
+
+  /* ===== BOUTON D'AIDE FLOTTANT ===== */
+  .help-btn {
+    position: fixed; bottom: 30px; right: 30px;
+    background: var(--dark); color: #fff; width: 60px; height: 60px;
+    border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    font-size: 28px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    transition: 0.3s; z-index: 100;
+  }
+  .help-btn:hover { background: var(--primary); transform: scale(1.05); }
+
+  /* ===== LAYOUT ===== */
+  .app-container { display: flex; flex: 1; }
+  
+  .sidebar {
+    width: 300px; background: #fff; padding: 40px 30px;
+    border-right: 1px solid var(--border); display: flex; flex-direction: column; z-index: 10;
+  }
+  .sidebar h2 { font-size: 18px; margin-bottom: 24px; color: var(--dark); }
+  .stepper { list-style: none; position: relative; margin-bottom: auto; }
+  .stepper::before {
+    content: ''; position: absolute; left: 7px; top: 10px; bottom: 20px;
+    width: 2px; background: var(--border); z-index: 1;
+  }
+  .stepper li {
+    position: relative; padding-left: 30px; margin-bottom: 24px;
+    font-size: 14px; color: var(--gray); font-weight: 500; transition: 0.3s;
+  }
+  .stepper li::before {
+    content: ''; position: absolute; left: 0; top: 2px;
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #fff; border: 2px solid var(--border); z-index: 2; transition: 0.3s;
+  }
+  .stepper li.active { color: var(--primary); font-weight: 700; }
+  .stepper li.active::before { background: var(--primary); border-color: var(--primary); }
+  .stepper li.completed::before { background: var(--primary); border-color: var(--primary); }
+
+  .trust-badge {
+    background: var(--bg); border: 1px solid var(--border); padding: 20px; border-radius: 8px;
+    text-align: center; margin-top: 40px;
+  }
+  .trust-badge .trustpilot-logo {
+    display: flex; align-items: center; justify-content: center; gap: 5px;
+    font-size: 18px; font-weight: 800; color: var(--dark); margin-bottom: 10px;
+  }
+  .trust-badge .trustpilot-logo span { color: #00b67a; }
+  .trust-badge .stars { color: #00b67a; font-size: 20px; letter-spacing: 2px; margin-bottom: 8px; }
+  .trust-badge .score { font-size: 13px; font-weight: 600; color: var(--dark); }
+  .trust-badge .score span { font-weight: 400; color: var(--gray); }
+
+  /* ===== MAIN CONTENT ===== */
+  .main-content {
+    flex: 1; position: relative; display: flex; flex-direction: column;
+    background: var(--bg);
+    background-image: 
+      radial-gradient(circle at 50% 100%, rgba(59,59,255,0.05) 0%, transparent 50%),
+      linear-gradient(0deg, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 100%);
+  }
+  
+  .progress-bar { height: 6px; background: #e2e4f0; width: 100%; }
+  .progress-fill { height: 100%; background: var(--primary); width: 11%; transition: width .4s cubic-bezier(0.4, 0, 0.2, 1); }
+
+  .step-container {
+    max-width: 900px; margin: 0 auto; padding: 40px 20px; width: 100%;
+    flex: 1; display: flex; flex-direction: column; justify-content: center;
+    z-index: 2; position: relative;
+  }
+
+  .btn-back {
+    background: none; border: none; color: var(--dark); font-size: 15px;
+    font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px;
+    margin-bottom: 20px; transition: 0.2s; width: fit-content;
+  }
+  .btn-back:hover { color: var(--primary); transform: translateX(-3px); }
+  .btn-back.hidden { visibility: hidden; }
+
+  .step-badge {
+    display: inline-block; background: #e2e4f0; color: var(--primary);
+    padding: 6px 12px; border-radius: 6px; font-size: 13px; font-weight: 700;
+    margin: 0 auto 20px auto; text-align: center;
+  }
+
+  .main-content h1 { text-align: center; font-size: 32px; font-weight: 800; margin-bottom: 10px; color: var(--dark); }
+  .main-content h1 span { color: var(--primary); }
+  .main-content h2 { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 30px; }
+
+  .alert-box {
+    background: #fef9e7; border: 1px solid #f9e79f; color: #b7950b;
+    padding: 16px; border-radius: 8px; text-align: left; font-size: 15px;
+    margin-bottom: 30px;
+  }
+  .alert-box.success {
+    background: #e8f8ef; border-color: #a9dfbf; color: #1e7a45;
+    text-align: center; font-size: 18px; font-weight: 600;
+  }
+
+  /* ===== CARTES ===== */
+  .cards-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px; margin-bottom: 30px;
+  }
+  .cards-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .card-option {
+    background: #fff; border: 2px solid var(--border); border-radius: 12px;
+    padding: 20px; text-align: center; cursor: pointer;
+    transition: all 0.2s ease; position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .card-option:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59,59,255,0.08); transform: translateY(-2px); }
+  .card-option.selected { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: var(--primary-light); }
+  
+  .card-icon { font-size: 40px; margin-bottom: 10px; line-height: 1; }
+  .card-label { font-size: 14px; font-weight: 600; color: var(--dark); line-height: 1.3; }
+
+  .check-box {
+    position: absolute; top: 15px; right: 15px;
+    width: 22px; height: 22px; border-radius: 4px;
+    border: 2px solid var(--border); background: #fff; transition: 0.2s;
+  }
+  .card-option:hover .check-box { border-color: var(--primary); }
+  .card-option.selected .check-box { background: var(--primary); border-color: var(--primary); }
+  .card-option.selected .check-box::after {
+    content: '✓'; color: #fff; position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%, -50%); font-size: 14px; font-weight: bold;
+  }
+
+  /* Section Titles for Travaux */
+  .section-title {
+    font-size: 18px; font-weight: 800; color: var(--dark);
+    margin: 30px 0 15px 0; text-align: left;
+  }
+
+  /* ===== BOUTON CONTINUER ===== */
+  .btn-continuer {
+    background: var(--yellow); color: var(--dark); border: none;
+    padding: 18px 40px; border-radius: 8px; font-size: 18px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    gap: 10px; margin: 0 auto; transition: 0.2s; width: 100%; max-width: 350px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  }
+  .btn-continuer:hover { background: #f4d03f; transform: translateY(-2px); box-shadow: 0 6px 12px rgba(0,0,0,0.1); }
+  .btn-continuer:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+  /* ===== FORMULAIRE ===== */
+  .form-row { display: flex; gap: 20px; max-width: 600px; margin: 0 auto 15px auto; }
+  .form-row .form-group { flex: 1; margin-bottom: 0; max-width: none; }
+  .form-group { margin-bottom: 15px; text-align: left; max-width: 600px; margin-inline: auto; }
+  .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--dark); }
+  .form-group input, .form-group select {
+    width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 8px;
+    font-size: 16px; transition: 0.2s; outline: none; background: #fff;
+  }
+  .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
+  .form-group input.invalid { border-color: #e74c3c; }
+  
+  .checkbox-group { max-width: 600px; margin: 20px auto; text-align: left; font-size: 14px; color: var(--gray); }
+  .checkbox-group label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; margin-bottom: 10px; }
+  .checkbox-group input { margin-top: 4px; width: 18px; height: 18px; accent-color: var(--primary); }
+
+  /* ===== RÉSUMÉ ===== */
+  .summary-box {
+    background: #fff; border: 1px solid var(--border); border-radius: 12px;
+    padding: 30px; margin-bottom: 30px; text-align: left; max-width: 600px; margin-inline: auto;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+  }
+  .summary-box h3 { font-size: 20px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 15px; color: var(--dark); }
+  .summary-line { display: flex; justify-content: space-between; margin-bottom: 12px; font-size: 15px; }
+  .summary-line span:first-child { color: var(--gray); }
+  .summary-line span:last-child { font-weight: 600; color: var(--dark); text-align: right; max-width: 60%; }
+  
+  .prime-estimate {
+    font-size: 36px; font-weight: 900; color: var(--primary);
+    text-align: center; margin: 20px 0 10px 0;
+  }
+  .prime-sub { text-align: center; font-size: 13px; color: var(--gray); }
+
+  /* Loader */
+  .loader {
+    border: 4px solid var(--border); border-top: 4px solid var(--primary);
+    border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
+    margin: 40px auto; display: none;
+  }
+  @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+  .hidden { display: none !important; }
+  
+  @media (max-width: 768px) {
+    .app-container { flex-direction: column; }
+    .sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--border); padding: 20px; }
+    .stepper { display: flex; justify-content: space-between; margin-bottom: 20px; }
+    .stepper::before { display: none; }
+    .stepper li { margin-bottom: 0; font-size: 12px; padding-left: 0; text-align: center; flex: 1; }
+    .stepper li::before { display: none; }
+    .trust-badge { display: none; }
+    .form-row { flex-direction: column; gap: 15px; }
+    .cards-grid.cols-3 { grid-template-columns: 1fr 1fr; }
+    .help-btn { bottom: 90px; right: 20px; width: 50px; height: 50px; font-size: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="cookie-banner">
+  <p>Nous utilisons des cookies pour mesurer l'audience et améliorer votre expérience. Aucun cookie non essentiel n'est déposé sans votre accord. <a href="#">En savoir plus</a></p>
+  <div class="cookie-btns">
+    <button class="btn-settings" onclick="alert('Paramètres des cookies...')">Paramétrer</button>
+    <button class="btn-refuse" onclick="setConsentement(false)">Refuser</button>
+    <button class="btn-accept" onclick="setConsentement(true)">Accepter</button>
+  </div>
+</div>
+
+<div class="help-btn" onclick="alert('Besoin d\'aide ? Notre équipe est disponible au 01 23 45 67 89.')">?</div>
+
+<header>
+  <div class="logo">effy<span>.</span></div>
+  <div class="title">Votre simulation en 2 minutes</div>
+  <div class="header-right">J'ai déjà un compte : <a href="#">Me connecter</a></div>
+</header>
+
+<div class="app-container">
+  
+  <aside class="sidebar">
+    <h2>Votre parcours</h2>
+    <ul class="stepper" id="stepper">
+      <li class="active" data-step="1">Votre logement</li>
+      <li data-step="2">Votre projet</li>
+      <li data-step="3">Vos informations</li>
+      <li data-step="4">Votre devis</li>
+    </ul>
+
+    <div class="trust-badge">
+      <div class="trustpilot-logo">Trust<span>pilot</span></div>
+      <div class="stars">★★★★★</div>
+      <div class="score">TrustScore 4.4 <span>8 996 avis</span></div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width: 11%;"></div></div>
+    
+    <div class="step-container">
+      <button class="btn-back hidden" id="btnBack" onclick="prevStep()">❮ Précédent</button>
+
+      <!-- 1 : Type de logement -->
+      <div class="step-content" id="step1">
+        <div class="step-badge">En 2 minutes !</div>
+        <h1>Découvrez vos primes et estimez le <span>coût de vos travaux</span></h1>
+        <h2>Votre projet concerne :</h2>
+        <div class="cards-grid">
+          <div class="card-option" onclick="selectCard(this, 'logement', 'maison')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Une maison</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'logement', 'appartement')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏢</div>
+            <div class="card-label">Un appartement</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 2 : Année de construction -->
+      <div class="step-content hidden" id="step2">
+        <h2>La construction de ce logement date de :</h2>
+        <div class="alert-box" style="text-align:center;">Cela permet de nous assurer de votre éligibilité aux différentes aides.</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="selectCard(this, 'annee', 'moins2')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Moins de 2 ans</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'annee', '2a15')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Entre 2 et 15 ans</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'annee', 'plus15')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Plus de 15 ans</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 3 : Surface -->
+      <div class="step-content hidden" id="step3">
+        <h2>Quelle est la surface de votre logement ?</h2>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="selectCard(this, 'surface', 'moins50')">
+            <div class="check-box"></div>
+            <div class="card-icon">📏</div>
+            <div class="card-label">Moins de 50 m²</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'surface', '50a100')">
+            <div class="check-box"></div>
+            <div class="card-icon">📏</div>
+            <div class="card-label">Entre 50 et 100 m²</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'surface', 'plus100')">
+            <div class="check-box"></div>
+            <div class="card-icon">📏</div>
+            <div class="card-label">Plus de 100 m²</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 4 : Chauffage Actuel -->
+      <div class="step-content hidden" id="step4">
+        <h2>Quel est votre mode de chauffage principal actuel ?</h2>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'fioul')">
+            <div class="check-box"></div>
+            <div class="card-icon">🛢️</div>
+            <div class="card-label">Fioul</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'electrique')">
+            <div class="check-box"></div>
+            <div class="card-icon">⚡</div>
+            <div class="card-label">Électrique</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'gaz')">
+            <div class="check-box"></div>
+            <div class="card-icon">🔥</div>
+            <div class="card-label">Gaz</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'bois')">
+            <div class="check-box"></div>
+            <div class="card-icon">🪵</div>
+            <div class="card-label">Bois</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'pac')">
+            <div class="check-box"></div>
+            <div class="card-icon">♻️</div>
+            <div class="card-label">Pompe à chaleur</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'chauffage', 'charbon')">
+            <div class="check-box"></div>
+            <div class="card-icon">🪨</div>
+            <div class="card-label">Charbon</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 5 : Travaux (DÉTAILLÉ) -->
+      <div class="step-content hidden" id="step5">
+        <div class="alert-box">
+          Rassurez-vous, <strong>ce choix n'est pas définitif</strong>. Vous pourrez en discuter avec un conseiller Effy.
+        </div>
+        <h2>Quels travaux souhaitez-vous réaliser ?</h2>
+
+        <!-- Isolation -->
+        <div class="section-title">Isolation et enveloppe</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'isolation_combles')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Isolation des Combles</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'isolation_toiture')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏠</div>
+            <div class="card-label">Isolation Toiture-Terrasse</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'isolation_murs')">
+            <div class="check-box"></div>
+            <div class="card-icon">🧱</div>
+            <div class="card-label">Isolation des Murs</div>
+          </div>
+        </div>
+
+        <!-- Menuiserie -->
+        <div class="section-title">Menuiserie</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'fenetres')">
+            <div class="check-box"></div>
+            <div class="card-icon">🪟</div>
+            <div class="card-label">Fenêtres / Porte-fenêtres</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'volets')">
+            <div class="check-box"></div>
+            <div class="card-icon">🪟</div>
+            <div class="card-label">Volets roulants électriques</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'porte')">
+            <div class="check-box"></div>
+            <div class="card-icon">🚪</div>
+            <div class="card-label">Porte d'entrée</div>
+          </div>
+        </div>
+
+        <!-- Confort d'été -->
+        <div class="section-title">Confort d'été</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'store')">
+            <div class="check-box"></div>
+            <div class="card-icon">⛱️</div>
+            <div class="card-label">Store banne</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'clim')">
+            <div class="check-box"></div>
+            <div class="card-icon">❄️</div>
+            <div class="card-label">Climatisation réversible</div>
+          </div>
+        </div>
+
+        <!-- Chauffage -->
+        <div class="section-title">Chauffage</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'pac_aireau')">
+            <div class="check-box"></div>
+            <div class="card-icon">♻️</div>
+            <div class="card-label">Pompe à Chaleur Air/Eau</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'pac_geo')">
+            <div class="check-box"></div>
+            <div class="card-icon">♻️</div>
+            <div class="card-label">Pompe à Chaleur Géothermique</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'pac_air')">
+            <div class="check-box"></div>
+            <div class="card-icon">♻️</div>
+            <div class="card-label">Pompe à Chaleur Air/Air</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'chaudiere_gaz')">
+            <div class="check-box"></div>
+            <div class="card-icon">🔥</div>
+            <div class="card-label">Chaudière gaz à condensation</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'radiateur')">
+            <div class="check-box"></div>
+            <div class="card-icon">♨️</div>
+            <div class="card-label">Radiateur électrique</div>
+          </div>
+        </div>
+
+        <!-- Eau Chaude -->
+        <div class="section-title">Chauffe-Eau</div>
+        <div class="cards-grid cols-3">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'ballon_thermo')">
+            <div class="check-box"></div>
+            <div class="card-icon">🚿</div>
+            <div class="card-label">Chauffe-eau Thermodynamique</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'ballon_elec')">
+            <div class="check-box"></div>
+            <div class="card-icon">🚿</div>
+            <div class="card-label">Chauffe-eau électrique</div>
+          </div>
+        </div>
+
+        <!-- Rénovation Globale -->
+        <div class="section-title">Rénovation globale</div>
+        <div class="cards-grid">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'reno_globale')">
+            <div class="check-box"></div>
+            <div class="card-icon">🏗️</div>
+            <div class="card-label" style="text-align:left; padding-left: 10px;">Combo Isolation / Chauffage / Ventilation</div>
+          </div>
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'je_ne_sais_pas')">
+            <div class="check-box"></div>
+            <div class="card-icon">🔍</div>
+            <div class="card-label" style="text-align:left; padding-left: 10px;">Je ne sais pas encore <br><span style="font-weight:400; font-size:12px; color:var(--gray);">Diagnostic gratuit en 2 minutes</span></div>
+          </div>
+        </div>
+
+        <button class="btn-continuer" id="btnTravaux" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 6 : Revenus -->
+      <div class="step-content hidden" id="step6">
+        <h2>Quel est votre revenu fiscal de référence ?</h2>
+        <div class="alert-box" style="text-align:center;">Ces informations permettent de calculer vos aides (ex: MaPrimeRénov').</div>
+        <div class="cards-grid">
+          <div class="card-option" onclick="selectCard(this, 'revenu', 'bleu')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">🔵</div>
+            <div class="card-label">Très modeste (Bleu)</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'revenu', 'jaune')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">🟡</div>
+            <div class="card-label">Modeste (Jaune)</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'revenu', 'violet')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">🟣</div>
+            <div class="card-label">Intermédiaire (Violet)</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'revenu', 'rose')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">🌸</div>
+            <div class="card-label">Supérieur (Rose)</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 7 : Statut d'occupation -->
+      <div class="step-content hidden" id="step7">
+        <h2>Quel est votre statut d'occupation ?</h2>
+        <div class="cards-grid">
+          <div class="card-option" onclick="selectCard(this, 'occupation', 'proprietaire')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">🔑</div>
+            <div class="card-label">Propriétaire</div>
+          </div>
+          <div class="card-option" onclick="selectCard(this, 'occupation', 'locataire')">
+            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="card-icon">📄</div>
+            <div class="card-label">Locataire</div>
+          </div>
+        </div>
+        <button class="btn-continuer" onclick="nextStep()" disabled>Continuer ❯</button>
+      </div>
+
+      <!-- 8 : Coordonnées -->
+      <div class="step-content hidden" id="step8">
+        <h2>Vos coordonnées</h2>
+        <p style="text-align:center; color:var(--gray); margin-bottom: 20px;">Pour recevoir votre estimation détaillée et être rappelé.</p>
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Civilité *</label>
+            <select id="inputCivilite">
+              <option value="M">M.</option>
+              <option value="Mme">Mme</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Code postal *</label>
+            <input type="text" id="inputCP" placeholder="75000" maxlength="5" oninput="checkForm()">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Prénom *</label>
+          <input type="text" id="inputPrenom" placeholder="Jean" oninput="checkForm()">
+        </div>
+        <div class="form-group">
+          <label>Nom *</label>
+          <input type="text" id="inputNom" placeholder="Dupont" oninput="checkForm()">
+        </div>
+        <div class="form-group">
+          <label>Adresse email *</label>
+          <input type="email" id="inputEmail" placeholder="jean.dupont@email.com" oninput="checkForm()">
+        </div>
+        <div class="form-group">
+          <label>Numéro de téléphone *</label>
+          <input type="tel" id="inputPhone" placeholder="06 12 34 56 78" oninput="checkForm()">
+        </div>
+
+        <div class="checkbox-group">
+          <label>
+            <input type="checkbox" id="checkRGPD" onchange="checkForm()">
+            <span>J'accepte que mes données soient traitées par MonParcours pour l'étude de mon projet et la réception d'offres. (Obligatoire)</span>
+          </label>
+        </div>
+
+        <button class="btn-continuer" id="btnSubmitContact" onclick="submitContact()" disabled>Voir mon estimation ❯</button>
+        <div class="loader" id="loader"></div>
+      </div>
+
+      <!-- 9 : Résultat -->
+      <div class="step-content hidden" id="step9">
+        <h2>Merci, <span id="resName" style="color:var(--primary);"></span> !</h2>
+        <div class="alert-box success">
+          ✅ Votre simulation est terminée. Voici une estimation de vos aides.
+        </div>
+
+        <div class="summary-box">
+          <h3>Résumé de votre projet</h3>
+          <div class="summary-line"><span>Logement :</span> <span id="resLogement">-</span></div>
+          <div class="summary-line"><span>Âge du bien :</span> <span id="resAnnee">-</span></div>
+          <div class="summary-line"><span>Surface :</span> <span id="resSurface">-</span></div>
+          <div class="summary-line"><span>Chauffage actuel :</span> <span id="resChauffage">-</span></div>
+          <div class="summary-line"><span>Travaux :</span> <span id="resTravaux" style="max-height: 100px; overflow-y: auto; display:block; text-align:right;">-</span></div>
+          <div class="summary-line"><span>Profil fiscal :</span> <span id="resRevenu">-</span></div>
+          <div class="summary-line"><span>Statut :</span> <span id="resOccupation">-</span></div>
+          
+          <div style="margin-top: 25px; border-top: 1px solid var(--border); padding-top: 20px;">
+            <div class="prime-sub">Prime estimée (sous réserve d'éligibilité)</div>
+            <div class="prime-estimate" id="resPrime">0 €</div>
+          </div>
+        </div>
+
+        <button class="btn-continuer" onclick="alert('Félicitations ' + document.getElementById('inputPrenom').value + ' ! Un conseiller vous contactera au ' + document.getElementById('inputPhone').value)">Être rappelé par un conseiller ❯</button>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const banner = document.getElementById('cookie-banner');
+  if (!localStorage.getItem('consentementCookies')) {
+    setTimeout(() => banner.classList.add('show'), 800);
+  }
+  function setConsentement(accepte) {
+    localStorage.setItem('consentementCookies', accepte ? 'accepte' : 'refuse');
+    banner.classList.remove('show');
+  }
+
+  let currentStep = 1;
+  const totalSteps = 9;
+  const formData = { travaux: [] };
+
+  function updateUI() {
+    let stepIndex = 1;
+    if (currentStep >= 1 && currentStep <= 5) stepIndex = 1;
+    if (currentStep === 6 || currentStep === 7) stepIndex = 2;
+    if (currentStep === 8) stepIndex = 3;
+    if (currentStep === 9) stepIndex = 4;
+
+    document.querySelectorAll('#stepper li').forEach((li, index) => {
+      const sNum = index + 1;
+      li.classList.remove('active', 'completed');
+      if (sNum === stepIndex) li.classList.add('active');
+      if (sNum < stepIndex) li.classList.add('completed');
+    });
+
+    document.getElementById('progressFill').style.width = `${(currentStep / totalSteps) * 100}%`;
+
+    document.querySelectorAll('.step-content').forEach(el => el.classList.add('hidden'));
+    document.getElementById(`step${currentStep}`).classList.remove('hidden');
+
+    const btnBack = document.getElementById('btnBack');
+    if (currentStep === 1 || currentStep === 9) btnBack.classList.add('hidden');
+    else btnBack.classList.remove('hidden');
+  }
+
+  // Seçim kartları (Tek seçim)
+  function selectCard(element, groupName, value) {
+    element.parentElement.querySelectorAll('.card-option').forEach(card => card.classList.remove('selected'));
+    element.classList.add('selected');
+    formData[groupName] = value;
+
+    const btn = element.closest('.step-content').querySelector('.btn-continuer');
+    if (btn) btn.disabled = false;
+  }
+
+  // Travaux seçimleri (Çoklu seçim - Toggle)
+  function toggleCard(element, groupName, value) {
+    element.classList.toggle('selected');
+    
+    if (element.classList.contains('selected')) {
+      if (!formData[groupName].includes(value)) formData[groupName].push(value);
+    } else {
+      formData[groupName] = formData[groupName].filter(item => item !== value);
+    }
+
+    const btn = document.getElementById('btnTravaux');
+    if (btn) btn.disabled = formData[groupName].length === 0;
+  }
+
+  function nextStep() {
+    if (currentStep < totalSteps) {
+      currentStep++;
+      updateUI();
+    }
+  }
+
+  function prevStep() {
+    if (currentStep > 1) {
+      currentStep--;
+      updateUI();
+    }
+  }
+
+  function checkForm() {
+    const cp = document.getElementById('inputCP').value.trim();
+    const prenom = document.getElementById('inputPrenom').value.trim();
+    const nom = document.getElementById('inputNom').value.trim();
+    const email = document.getElementById('inputEmail').value.trim();
+    const phone = document.getElementById('inputPhone').value.trim();
+    const rgpd = document.getElementById('checkRGPD').checked;
+    
+    const emailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    const phoneValid = phone.replace(/[^0-9]/g, '').length >= 10;
+    const cpValid = cp.length === 5 && !isNaN(cp);
+
+    document.getElementById('inputEmail').classList.toggle('invalid', email.length > 0 && !emailValid);
+    document.getElementById('inputPhone').classList.toggle('invalid', phone.length > 0 && !phoneValid);
+    document.getElementById('inputCP').classList.toggle('invalid', cp.length > 0 && !cpValid);
+
+    document.getElementById('btnSubmitContact').disabled = !(cpValid && prenom && nom && emailValid && phoneValid && rgpd);
+  }
+
+  function submitContact() {
+    document.getElementById('btnSubmitContact').classList.add('hidden');
+    document.getElementById('loader').style.display = 'block';
+
+    setTimeout(() => {
+      document.getElementById('loader').style.display = 'none';
+      currentStep = 9;
+      calculateResult();
+      updateUI();
+    }, 1500);
+  }
+
+  function calculateResult() {
+    const labels = {
+      maison: 'Une maison', appartement: 'Un appartement',
+      moins2: 'Moins de 2 ans', '2a15': 'Entre 2 et 15 ans', plus15: 'Plus de 15 ans',
+      moins50: 'Moins de 50 m²', '50a100': 'Entre 50 et 100 m²', plus100: 'Plus de 100 m²',
+      fioul: 'Fioul', electrique: 'Électrique', gaz: 'Gaz', bois: 'Bois', pac: 'Pompe à chaleur', charbon: 'Charbon',
+      bleu: 'Très modeste (Bleu)', jaune: 'Modeste (Jaune)', violet: 'Intermédiaire (Violet)', rose: 'Supérieur (Rose)',
+      proprietaire: 'Propriétaire', locataire: 'Locataire',
+      // Travaux
+      isolation_combles: 'Isolation Combles', isolation_toiture: 'Toiture-Terrasse', isolation_murs: 'Murs',
+      fenetres: 'Fenêtres', volets: 'Volets', porte: 'Porte d\'entrée',
+      store: 'Store banne', clim: 'Climatisation',
+      pac_aireau: 'PAC Air/Eau', pac_geo: 'PAC Géothermique', pac_air: 'PAC Air/Air', chaudiere_gaz: 'Chaudière Gaz', radiateur: 'Radiateur',
+      ballon_thermo: 'Chauffe-eau Thermodynamique', ballon_elec: 'Chauffe-eau Électrique',
+      reno_globale: 'Rénovation globale', je_ne_sais_pas: 'Je ne sais pas encore'
+    };
+
+    document.getElementById('resName').textContent = document.getElementById('inputPrenom').value;
+    document.getElementById('resLogement').textContent = labels[formData.logement] || '-';
+    document.getElementById('resAnnee').textContent = labels[formData.annee] || '-';
+    document.getElementById('resSurface').textContent = labels[formData.surface] || '-';
+    document.getElementById('resChauffage').textContent = labels[formData.chauffage] || '-';
+    document.getElementById('resRevenu').textContent = labels[formData.revenu] || '-';
+    document.getElementById('resOccupation').textContent = labels[formData.occupation] || '-';
+
+    // Travaux formatlama
+    const travauxList = formData.travaux.map(t => labels[t]).join(', ');
+    document.getElementById('resTravaux').textContent = travauxList || '-';
+
+    // Basit Hesaplama
+    let prime = 0;
+    if (formData.revenu === 'bleu') prime = 7500;
+    else if (formData.revenu === 'jaune') prime = 5000;
+    else if (formData.revenu === 'violet') prime = 3000;
+
+    if (formData.chauffage === 'fioul' || formData.chauffage === 'charbon') prime += 2000;
+    if (formData.travaux.includes('reno_globale')) prime += 5000;
+    if (formData.surface === 'plus100') prime += 1000;
+    
+    if (formData.annee === 'moins2') prime = 0;
+
+    const primeEl = document.getElementById('resPrime');
+    if (prime > 0) {
+      primeEl.textContent = `Jusqu'à ${prime.toLocaleString('fr-FR')} €`;
+      primeEl.style.color = 'var(--primary)';
+    } else {
+      primeEl.textContent = 'Non éligible';
+      primeEl.style.color = '#e74c3c';
+      primeEl.style.fontSize = '24px';
+    }
+  }
+
+  updateUI();
+</script>
+</body>
+</html>
