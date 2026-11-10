@@ -13,6 +13,7 @@
     --gray: #6b7280;
     --border: #e5e7eb;
     --bg: #f8f9fc;
+    --error: #e74c3c;
   }
   * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', system-ui, sans-serif; }
   body { background: #fff; color: var(--dark); display: flex; flex-direction: column; min-height: 100vh; }
@@ -138,9 +139,9 @@
   .main-content h2 { text-align: center; font-size: 24px; font-weight: 700; margin-bottom: 30px; }
 
   .alert-box {
-    background: #fef9e7; border: 1px solid #f9e79f; color: #b7950b;
-    padding: 16px; border-radius: 8px; text-align: left; font-size: 15px;
-    margin-bottom: 30px;
+    background: #fef9e7; border: 1px solid #f9e79f; color: #8a6d3b;
+    padding: 16px 20px; border-radius: 8px; text-align: left; font-size: 15px;
+    margin-bottom: 30px; line-height: 1.5;
   }
   .alert-box.success {
     background: #e8f8ef; border-color: #a9dfbf; color: #1e7a45;
@@ -155,21 +156,24 @@
   .cards-grid.cols-3 { grid-template-columns: repeat(3, 1fr); }
   .card-option {
     background: #fff; border: 2px solid var(--border); border-radius: 12px;
-    padding: 20px; text-align: center; cursor: pointer;
+    padding: 20px 15px; text-align: center; cursor: pointer;
     transition: all 0.2s ease; position: relative;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 130px;
   }
   .card-option:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59,59,255,0.08); transform: translateY(-2px); }
   .card-option.selected { border-color: var(--primary); box-shadow: 0 0 0 1px var(--primary); background: var(--primary-light); }
   
-  .card-icon { font-size: 40px; margin-bottom: 10px; line-height: 1; }
+  .card-icon { font-size: 40px; margin-bottom: 12px; line-height: 1; }
   .card-label { font-size: 14px; font-weight: 600; color: var(--dark); line-height: 1.3; }
 
+  /* Custom Checkbox (Carré pour travaux, Rond pour le reste) */
   .check-box {
     position: absolute; top: 15px; right: 15px;
     width: 22px; height: 22px; border-radius: 4px;
     border: 2px solid var(--border); background: #fff; transition: 0.2s;
   }
+  .check-box.round { border-radius: 50%; }
   .card-option:hover .check-box { border-color: var(--primary); }
   .card-option.selected .check-box { background: var(--primary); border-color: var(--primary); }
   .card-option.selected .check-box::after {
@@ -182,6 +186,19 @@
     font-size: 18px; font-weight: 800; color: var(--dark);
     margin: 30px 0 15px 0; text-align: left;
   }
+
+  /* Bouton "Je ne sais pas encore" */
+  .card-link {
+    background: #fff; border: 2px solid var(--border); border-radius: 12px;
+    padding: 20px; display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer; transition: 0.2s; margin-bottom: 30px;
+  }
+  .card-link:hover { border-color: var(--primary); box-shadow: 0 4px 12px rgba(59,59,255,0.08); }
+  .card-link .left { display: flex; align-items: center; gap: 15px; text-align: left; }
+  .card-link .icon { font-size: 30px; }
+  .card-link .text strong { display: block; font-size: 15px; color: var(--dark); }
+  .card-link .text span { display: block; font-size: 13px; color: var(--gray); font-weight: 400; }
+  .card-link .arrow { font-size: 20px; font-weight: bold; color: var(--dark); }
 
   /* ===== BOUTON CONTINUER ===== */
   .btn-continuer {
@@ -197,14 +214,17 @@
   /* ===== FORMULAIRE ===== */
   .form-row { display: flex; gap: 20px; max-width: 600px; margin: 0 auto 15px auto; }
   .form-row .form-group { flex: 1; margin-bottom: 0; max-width: none; }
-  .form-group { margin-bottom: 15px; text-align: left; max-width: 600px; margin-inline: auto; }
+  .form-group { margin-bottom: 20px; text-align: left; max-width: 600px; margin-inline: auto; }
   .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: var(--dark); }
   .form-group input, .form-group select {
     width: 100%; padding: 16px; border: 2px solid var(--border); border-radius: 8px;
     font-size: 16px; transition: 0.2s; outline: none; background: #fff;
   }
   .form-group input:focus, .form-group select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px var(--primary-light); }
-  .form-group input.invalid { border-color: #e74c3c; }
+  
+  .form-group input.invalid { border-color: var(--error); }
+  .error-msg { display: none; color: var(--error); font-size: 12px; margin-top: 5px; font-weight: 600; }
+  .form-group input.invalid + .error-msg { display: block; }
   
   .checkbox-group { max-width: 600px; margin: 20px auto; text-align: left; font-size: 14px; color: var(--gray); }
   .checkbox-group label { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; margin-bottom: 10px; }
@@ -230,7 +250,7 @@
   /* Loader */
   .loader {
     border: 4px solid var(--border); border-top: 4px solid var(--primary);
-    border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;
+    border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite;
     margin: 40px auto; display: none;
   }
   @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -301,12 +321,12 @@
         <h2>Votre projet concerne :</h2>
         <div class="cards-grid">
           <div class="card-option" onclick="selectCard(this, 'logement', 'maison')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🏠</div>
             <div class="card-label">Une maison</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'logement', 'appartement')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🏢</div>
             <div class="card-label">Un appartement</div>
           </div>
@@ -320,17 +340,17 @@
         <div class="alert-box" style="text-align:center;">Cela permet de nous assurer de votre éligibilité aux différentes aides.</div>
         <div class="cards-grid cols-3">
           <div class="card-option" onclick="selectCard(this, 'annee', 'moins2')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🏠</div>
             <div class="card-label">Moins de 2 ans</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'annee', '2a15')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🏠</div>
             <div class="card-label">Entre 2 et 15 ans</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'annee', 'plus15')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🏠</div>
             <div class="card-label">Plus de 15 ans</div>
           </div>
@@ -343,17 +363,17 @@
         <h2>Quelle est la surface de votre logement ?</h2>
         <div class="cards-grid cols-3">
           <div class="card-option" onclick="selectCard(this, 'surface', 'moins50')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">📏</div>
             <div class="card-label">Moins de 50 m²</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'surface', '50a100')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">📏</div>
             <div class="card-label">Entre 50 et 100 m²</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'surface', 'plus100')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">📏</div>
             <div class="card-label">Plus de 100 m²</div>
           </div>
@@ -366,32 +386,32 @@
         <h2>Quel est votre mode de chauffage principal actuel ?</h2>
         <div class="cards-grid cols-3">
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'fioul')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🛢️</div>
             <div class="card-label">Fioul</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'electrique')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">⚡</div>
             <div class="card-label">Électrique</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'gaz')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🔥</div>
             <div class="card-label">Gaz</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'bois')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🪵</div>
             <div class="card-label">Bois</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'pac')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">♻️</div>
             <div class="card-label">Pompe à chaleur</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'chauffage', 'charbon')">
-            <div class="check-box"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🪨</div>
             <div class="card-label">Charbon</div>
           </div>
@@ -508,17 +528,25 @@
 
         <!-- Rénovation Globale -->
         <div class="section-title">Rénovation globale</div>
-        <div class="cards-grid">
-          <div class="card-option" onclick="toggleCard(this, 'travaux', 'reno_globale')">
+        <div class="cards-grid" style="grid-template-columns: 1fr;">
+          <div class="card-option" onclick="toggleCard(this, 'travaux', 'reno_globale')" style="flex-direction: row; justify-content: flex-start; padding: 20px;">
             <div class="check-box"></div>
-            <div class="card-icon">🏗️</div>
-            <div class="card-label" style="text-align:left; padding-left: 10px;">Combo Isolation / Chauffage / Ventilation</div>
+            <div class="card-icon" style="margin-bottom:0; margin-right: 15px;">🏗️</div>
+            <div class="card-label">Combo Isolation / Chauffage / Ventilation</div>
           </div>
-          <div class="card-option" onclick="toggleCard(this, 'travaux', 'je_ne_sais_pas')">
-            <div class="check-box"></div>
-            <div class="card-icon">🔍</div>
-            <div class="card-label" style="text-align:left; padding-left: 10px;">Je ne sais pas encore <br><span style="font-weight:400; font-size:12px; color:var(--gray);">Diagnostic gratuit en 2 minutes</span></div>
-          </div>
+        </div>
+
+        <!-- Je ne sais pas -->
+        <div class="section-title">Je ne sais pas encore</div>
+        <div class="card-link" onclick="toggleCard(this, 'travaux', 'je_ne_sais_pas')">
+           <div class="left">
+             <div class="icon">🔍</div>
+             <div class="text">
+               <strong>Identifier les bons travaux pour mon logement</strong>
+               <span>Diagnostic gratuit en 2 minutes</span>
+             </div>
+           </div>
+           <div class="arrow">❯</div>
         </div>
 
         <button class="btn-continuer" id="btnTravaux" onclick="nextStep()" disabled>Continuer ❯</button>
@@ -530,22 +558,22 @@
         <div class="alert-box" style="text-align:center;">Ces informations permettent de calculer vos aides (ex: MaPrimeRénov').</div>
         <div class="cards-grid">
           <div class="card-option" onclick="selectCard(this, 'revenu', 'bleu')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🔵</div>
             <div class="card-label">Très modeste (Bleu)</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'revenu', 'jaune')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🟡</div>
             <div class="card-label">Modeste (Jaune)</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'revenu', 'violet')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🟣</div>
             <div class="card-label">Intermédiaire (Violet)</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'revenu', 'rose')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🌸</div>
             <div class="card-label">Supérieur (Rose)</div>
           </div>
@@ -558,12 +586,12 @@
         <h2>Quel est votre statut d'occupation ?</h2>
         <div class="cards-grid">
           <div class="card-option" onclick="selectCard(this, 'occupation', 'proprietaire')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">🔑</div>
             <div class="card-label">Propriétaire</div>
           </div>
           <div class="card-option" onclick="selectCard(this, 'occupation', 'locataire')">
-            <div class="check-box" style="border-radius:50%;"></div>
+            <div class="check-box round"></div>
             <div class="card-icon">📄</div>
             <div class="card-label">Locataire</div>
           </div>
@@ -587,6 +615,7 @@
           <div class="form-group">
             <label>Code postal *</label>
             <input type="text" id="inputCP" placeholder="75000" maxlength="5" oninput="checkForm()">
+            <div class="error-msg">Code postal invalide (5 chiffres requis).</div>
           </div>
         </div>
         <div class="form-group">
@@ -600,10 +629,12 @@
         <div class="form-group">
           <label>Adresse email *</label>
           <input type="email" id="inputEmail" placeholder="jean.dupont@email.com" oninput="checkForm()">
+          <div class="error-msg">Adresse email invalide.</div>
         </div>
         <div class="form-group">
           <label>Numéro de téléphone *</label>
           <input type="tel" id="inputPhone" placeholder="06 12 34 56 78" oninput="checkForm()">
+          <div class="error-msg">Numéro de téléphone invalide (10 chiffres).</div>
         </div>
 
         <div class="checkbox-group">
@@ -685,7 +716,6 @@
     else btnBack.classList.remove('hidden');
   }
 
-  // Seçim kartları (Tek seçim)
   function selectCard(element, groupName, value) {
     element.parentElement.querySelectorAll('.card-option').forEach(card => card.classList.remove('selected'));
     element.classList.add('selected');
@@ -695,7 +725,6 @@
     if (btn) btn.disabled = false;
   }
 
-  // Travaux seçimleri (Çoklu seçim - Toggle)
   function toggleCard(element, groupName, value) {
     element.classList.toggle('selected');
     
@@ -735,6 +764,7 @@
     const phoneValid = phone.replace(/[^0-9]/g, '').length >= 10;
     const cpValid = cp.length === 5 && !isNaN(cp);
 
+    // Afficher/Masquer les erreurs
     document.getElementById('inputEmail').classList.toggle('invalid', email.length > 0 && !emailValid);
     document.getElementById('inputPhone').classList.toggle('invalid', phone.length > 0 && !phoneValid);
     document.getElementById('inputCP').classList.toggle('invalid', cp.length > 0 && !cpValid);
@@ -762,7 +792,6 @@
       fioul: 'Fioul', electrique: 'Électrique', gaz: 'Gaz', bois: 'Bois', pac: 'Pompe à chaleur', charbon: 'Charbon',
       bleu: 'Très modeste (Bleu)', jaune: 'Modeste (Jaune)', violet: 'Intermédiaire (Violet)', rose: 'Supérieur (Rose)',
       proprietaire: 'Propriétaire', locataire: 'Locataire',
-      // Travaux
       isolation_combles: 'Isolation Combles', isolation_toiture: 'Toiture-Terrasse', isolation_murs: 'Murs',
       fenetres: 'Fenêtres', volets: 'Volets', porte: 'Porte d\'entrée',
       store: 'Store banne', clim: 'Climatisation',
@@ -779,11 +808,9 @@
     document.getElementById('resRevenu').textContent = labels[formData.revenu] || '-';
     document.getElementById('resOccupation').textContent = labels[formData.occupation] || '-';
 
-    // Travaux formatlama
     const travauxList = formData.travaux.map(t => labels[t]).join(', ');
     document.getElementById('resTravaux').textContent = travauxList || '-';
 
-    // Basit Hesaplama
     let prime = 0;
     if (formData.revenu === 'bleu') prime = 7500;
     else if (formData.revenu === 'jaune') prime = 5000;
@@ -801,7 +828,7 @@
       primeEl.style.color = 'var(--primary)';
     } else {
       primeEl.textContent = 'Non éligible';
-      primeEl.style.color = '#e74c3c';
+      primeEl.style.color = 'var(--error)';
       primeEl.style.fontSize = '24px';
     }
   }
